@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MediERP — Hospital Operations Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#101B33; --navy-2:#16223F; --navy-line:#26314f;
+  --bg:#EEF1F5; --card:#FFFFFF; --line:#E3E8EF;
+  --ink:#101B33; --ink-2:#4B5670; --ink-3:#8992A6;
+  --teal:#0C7C78; --teal-dk:#095F5C; --teal-tint:#E4F3F2;
+  --red:#C0362C; --red-tint:#FBEAE8;
+  --amber:#B7791F; --amber-tint:#FBF1DF;
+  --green:#1E7A46; --green-tint:#E5F5EC;
+  --blue:#2A5BD7; --blue-tint:#EAF0FE;
+  --r:10px; --shadow:0 1px 2px rgba(16,27,51,.06), 0 1px 1px rgba(16,27,51,.04);
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{
+  margin:0; font-family:'IBM Plex Sans',system-ui,sans-serif; background:var(--bg); color:var(--ink);
+  height:100%; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+a{color:inherit;}
+#app{display:flex; min-height:100vh;}
+
+/* Sidebar */
+.sidebar{
+  width:230px; flex:0 0 230px; background:var(--navy); color:#C9D2E6;
+  display:flex; flex-direction:column; padding:20px 14px; position:sticky; top:0; height:100vh;
+}
+.brand{display:flex; align-items:center; gap:9px; padding:4px 8px 22px 8px; color:#fff;}
+.brand-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(155deg,var(--teal),#0a4f4c);display:flex;align-items:center;justify-content:center;flex:0 0 26px;}
+.brand-mark svg{width:14px;height:14px;}
+.brand-name{font-weight:600; font-size:15.5px; letter-spacing:.1px;}
+nav{display:flex; flex-direction:column; gap:2px; flex:1;}
+.nav-item{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer;
+  font-size:13.6px; color:#AEB9D1; border:1px solid transparent; transition:background .12s,color .12s;
+}
+.nav-item svg{width:16px;height:16px; flex:0 0 16px; opacity:.85;}
+.nav-item:hover{background:var(--navy-2); color:#fff;}
+.nav-item.active{background:var(--navy-2); color:#fff; border-color:var(--navy-line); box-shadow:inset 2px 0 0 var(--teal);}
+.nav-badge{margin-left:auto; font-size:10.5px; font-family:'IBM Plex Mono',monospace; background:var(--red); color:#fff; padding:1px 6px; border-radius:20px;}
+.sidebar-foot{
+  margin-top:10px; padding-top:12px; border-top:1px solid var(--navy-line);
+  display:flex; align-items:center; gap:9px; padding:10px; border-radius:8px;
+}
+.avatar{width:30px;height:30px;border-radius:50%; background:#3A4A73; display:flex;align-items:center;justify-content:center; font-size:12px; font-weight:600; color:#fff; flex:0 0 30px;}
+.foot-name{font-size:12.8px; color:#fff; font-weight:600; line-height:1.25;}
+.foot-role{font-size:11px; color:#8592B0;}
+
+/* Main */
+main{flex:1; min-width:0; display:flex; flex-direction:column;}
+.topbar{
+  background:var(--card); border-bottom:1px solid var(--line); padding:16px 26px;
+  display:flex; align-items:center; gap:18px; position:sticky; top:0; z-index:5;
+}
+.page-title{font-size:19px; font-weight:600; letter-spacing:-.2px; white-space:nowrap;}
+.pill{font-size:11px; font-weight:600; color:var(--green); background:var(--green-tint); padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);}
+.search{
+  flex:1; display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--line);
+  border-radius:8px; padding:8px 12px; color:var(--ink-3); font-size:13px; max-width:420px; margin-left:auto;
+}
+.search svg{width:14px;height:14px; flex:0 0 14px;}
+.btn{
+  border:none; border-radius:8px; padding:9px 15px; font-family:inherit; font-size:13px; font-weight:600;
+  cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; transition:filter .1s, transform .05s;
+}
+.btn:active{transform:translateY(1px);}
+.btn-dark{background:var(--navy); color:#fff;}
+.btn-dark:hover{filter:brightness(1.2);}
+.btn-teal{background:var(--teal); color:#fff;}
+.btn-teal:hover{filter:brightness(1.1);}
+.btn-outline{background:#fff; border:1px solid var(--line); color:var(--ink-2);}
+.btn-outline:hover{border-color:var(--ink-3);}
+.btn-sm{padding:6px 11px; font-size:12px;}
+
+.content{padding:22px 26px 50px; overflow-x:auto;}
+.view{display:none; animation:fade .25s ease;}
+.view.active{display:block;}
+@keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+.grid{display:grid; gap:16px;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-main{grid-template-columns:2fr 1fr;}
+@media (max-width:980px){.grid-4{grid-template-columns:repeat(2,1fr);} .grid-main{grid-template-columns:1fr;}}
+
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow);}
+.card-pad{padding:18px 20px;}
+.card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;}
+.card-title{font-size:14.5px; font-weight:600;}
+.card-sub{font-size:11.5px; color:var(--ink-3); margin-top:2px;}
+
+.stat-num{font-size:27px; font-weight:700; letter-spacing:-.5px; margin:6px 0 2px;}
+.stat-tag{font-size:11.5px; font-weight:600;}
+.stat-note{font-size:11.5px; color:var(--ink-3); margin-top:6px;}
+.tag-red{color:var(--red);} .tag-amber{color:var(--amber);} .tag-blue{color:var(--blue);} .tag-green{color:var(--green);}
+
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th{text-align:left; font-size:11px; text-transform:none; color:var(--ink-3); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--line);}
+td{padding:11px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+tr.row-click{cursor:pointer;}
+tr.row-click:hover{background:#FAFBFD;}
+
+.chip{display:inline-block; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:5px; letter-spacing:.2px;}
+.chip-red{background:var(--red-tint); color:var(--red);}
+.chip-amber{background:var(--amber-tint); color:var(--amber);}
+.chip-yellow{background:#FEF6E0; color:#8A6D1A;}
+.chip-green{background:var(--green-tint); color:var(--green);}
+.chip-blue{background:var(--blue-tint); color:var(--blue);}
+.chip-grey{background:#EEF1F5; color:var(--ink-2);}
+
+.alert{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:8px; font-size:13px; margin-bottom:16px;}
+.alert svg{width:16px;height:16px; flex:0 0 16px; margin-top:1px;}
+.alert-amber{background:var(--amber-tint); color:#7A5A0E; border:1px solid #F0DDA8;}
+.alert-red{background:var(--red-tint); color:#8B241B; border:1px solid #F1C2BC;}
+
+.med-row{display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);}
+.med-row:last-child{border-bottom:none;}
+.med-name{font-weight:600; font-size:13.6px;}
+.med-sub{font-size:11.5px; color:var(--ink-3); margin-top:2px;}
+.med-timing{font-size:12px; color:var(--ink-2); flex:1;}
+.progress{height:8px; border-radius:20px; background:#EEF1F5; overflow:hidden;}
+.progress > div{height:100%; border-radius:20px;}
+.note-box{background:var(--bg); border-radius:8px; padding:13px 14px; font-size:13px; line-height:1.55; color:var(--ink-2); font-style:italic; border-left:3px solid var(--teal);}
+.note-meta{font-size:11px; color:var(--ink-3); margin-top:8px; font-style:normal;}
+
+.tabs{display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap;}
+.tab{padding:8px 14px; border-radius:8px; font-size:12.8px; font-weight:600; cursor:pointer; background:#fff; border:1px solid var(--line); color:var(--ink-2);}
+.tab.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+
+.triage-band{display:flex; gap:14px; margin-bottom:18px;}
+.triage-card{flex:1; border-radius:var(--r); padding:14px 16px; border:1px solid;}
+.triage-card h4{margin:0 0 4px; font-size:13.5px;}
+.triage-card .n{font-size:11.5px;}
+.t-red{background:var(--red-tint); border-color:#F1C2BC; color:var(--red);}
+.t-amber{background:var(--amber-tint); border-color:#F0DDA8; color:var(--amber);}
+.t-yellow{background:#FEF6E0; border-color:#F1E3AE; color:#8A6D1A;}
+.dot{width:7px;height:7px;border-radius:50%; display:inline-block; margin-right:6px;}
+
+.ward-photo{width:100%; height:150px; object-fit:cover; border-radius:8px 8px 0 0; display:block; background:#dde3ea;}
+.ward-card{border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff;}
+.ward-card .wc-body{padding:12px 14px;}
+.ward-card .wc-name{font-weight:600; font-size:13.4px;}
+.ward-card .wc-sub{font-size:11.5px; color:var(--ink-3); margin-top:3px; display:flex; justify-content:space-between; align-items:center;}
+
+.pr-profile{display:flex; flex-direction:column; align-items:center; text-align:center;}
+.pr-avatar{width:74px;height:74px;border-radius:50%; object-fit:cover; margin-bottom:10px; border:3px solid var(--bg);}
+.pr-name{font-size:16.5px; font-weight:700;}
+.pr-meta{font-size:12px; color:var(--ink-3); margin-top:2px;}
+.pr-section{margin-top:16px; text-align:left; width:100%; padding-top:14px; border-top:1px solid var(--line);}
+.pr-label{font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-3); font-weight:600; margin-bottom:5px;}
+.pr-value{font-size:13px; color:var(--ink);}
+.timeline{position:relative; padding-left:20px;}
+.timeline::before{content:"";position:absolute; left:5px; top:6px; bottom:6px; width:1.5px; background:var(--line);}
+.tl-item{position:relative; padding-bottom:20px;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-item::before{content:"";position:absolute; left:-20px; top:4px; width:9px;height:9px;border-radius:50%; background:var(--teal); border:2px solid #fff; box-shadow:0 0 0 1.5px var(--teal);}
+.tl-date{font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--ink-3); margin-bottom:3px;}
+.tl-title{font-weight:600; font-size:13.4px; margin-bottom:3px;}
+.tl-desc{font-size:12.6px; color:var(--ink-2); line-height:1.5;}
+
+.chart-note{font-size:13px; color:var(--ink-2); line-height:1.6;}
+.result-red{color:var(--red); font-weight:600;}
+
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0;
+  background:var(--navy); color:#fff; padding:12px 20px; border-radius:9px; font-size:13px; font-weight:500;
+  box-shadow:0 8px 24px rgba(16,27,51,.3); z-index:100; pointer-events:none; transition:opacity .2s, transform .2s;
+  display:flex; align-items:center; gap:8px;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+.toast svg{width:14px;height:14px; color:var(--teal);}
+
+@media (max-width:820px){
+  .sidebar{position:fixed; left:-230px; z-index:20; transition:left .2s; box-shadow:0 0 30px rgba(0,0,0,.3);}
+  .sidebar.open{left:0;}
+  .menu-btn{display:flex;}
+  .search{max-width:none;}
+}
+.menu-btn{display:none; align-items:center; justify-content:center; width:34px;height:34px; border-radius:8px; border:1px solid var(--line); background:#fff; cursor:pointer; flex:0 0 34px;}
+.menu-btn svg{width:17px;height:17px;}
+.scrim{display:none; position:fixed; inset:0; background:rgba(16,27,51,.35); z-index:19;}
+.scrim.show{display:block;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="scrim" id="scrim" onclick="closeMenu()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 4v16M4 12h16"/></svg></div>
+    <div class="brand-name">MediERP</div>
+  </div>
+  <nav>
+    <div class="nav-item active" data-view="ops" onclick="go('ops')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Ops Dashboard
+    </div>
+    <div class="nav-item" data-view="er" onclick="go('er')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 2 7v6c0 5 4.5 8.5 10 9 5.5-.5 10-4 10-9V7z"/><path d="M9 12h6M12 9v6"/></svg>
+      Emergency Dept <span class="nav-badge">4</span>
+    </div>
+    <div class="nav-item" data-view="op" onclick="go('op')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21c0-4-3.5-6-8-6s-8 2-8 6"/><circle cx="12" cy="7" r="4"/></svg>
+      Outpatient (OP)
+    </div>
+    <div class="nav-item" data-view="census" onclick="go('census')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v6"/></svg>
+      Admitted Census
+    </div>
+    <div class="nav-item" data-view="records" onclick="go('records')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></svg>
+      Patient Records
+    </div>
+    <div class="nav-item" data-view="inpatient" onclick="go('inpatient')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17h18M6 17V9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8M3 21v-2M21 21v-2M8 13l2 2 4-4"/></svg>
+      Inpatient Work
+    </div>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="avatar">EV</div>
+    <div><div class="foot-name">Dr. Syed Ali Asgar</div><div class="foot-role">Chief of Staff</div></div>
+  </div>
+</aside>
+
+<main>
+  <div class="topbar">
+    <button class="menu-btn" onclick="openMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="#101B33" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div class="page-title" id="pageTitle">Operations Control &amp; Live Command Center</div>
+    <span class="pill" id="pagePill">Live Operational</span>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      Search patient, MRN, or doctor…
+    </div>
+    <button class="btn btn-dark" onclick="toast('Quick Register form opened')">Quick Register ↗</button>
+  </div>
+
+  <div class="content">
+
+    <!-- OPS DASHBOARD -->
+    <section class="view active" id="view-ops">
+      <div class="grid grid-4" style="margin-bottom:16px;">
+        <div class="card card-pad row-click" onclick="go('er')">
+          <div class="card-title" style="font-size:12px;color:var(--ink-3);font-weight:600;">Emergency Waiting Queue</div>
+          <div class="stat-num">14 <span style="font-size:14px;font-weight:600;color:var(--ink-3);">Patients</span></div>
+          <div class="stat-tag tag-red">4 Critical</div>
+          <div class="stat-note">Avg wait time: 12 min</div>
+        </div>
+        <div class="card card-pad row-click" onclick="go('op')">
+          <div class="card-title" style="font-size:12px;color:var(--ink-3);font-weight:600;">OP Workload Load</div>
+          <div class="stat-num">189 <span style="font-size:14px;font-weight:600;color:var(--ink-3);">Visits</span></div>
+          <div class="stat-tag tag-blue">Normal Volume</div>
+          <div class="stat-note">87% Scheduled, 13% Walk-in</div>
+        </div>
+        <div class="card card-pad row-click" onclick="go('census')">
+          <div class="card-title" style="font-size:12px;color:var(--ink-3);font-weight:600;">Total Bed Occupancy</div>
+          <div class="stat-num">142<span style="font-size:15px;color:var(--ink-3);">/160 Beds</span></div>
+          <div class="stat-tag tag-amber">88.7% Occupied</div>
+          <div class="stat-note">ICU Capacity: 92%</div>
+        </div>
+        <div class="card card-pad">
+          <div class="card-title" style="font-size:12px;color:var(--ink-3);font-weight:600;">Pending Labs &amp; Alerts</div>
+          <div class="stat-num">22 <span style="font-size:14px;font-weight:600;color:var(--ink-3);">Pending</span></div>
+          <div class="stat-tag tag-red">High Priority</div>
+          <div class="stat-note">3 Critical Stat Alerts</div>
+        </div>
+      </div>
+      <div class="grid grid-main">
+        <div class="card card-pad">
+          <div class="card-head"><div class="card-title">Live Emergency Queue (Stat-Alert)</div><span class="chip chip-red">6 High-Triage Patients</span></div>
+          <table style="margin-top:10px;">
+            <tr><th>Triage</th><th>Patient</th><th>Time</th><th>Chief Complaint</th><th>Location</th></tr>
+            <tr class="row-click" onclick="go('er')"><td><span class="chip chip-red">IMMEDIATE</span></td><td><strong>Arthur Morgan</strong></td><td class="mono" style="color:var(--ink-3);">4 min ago</td><td>Acute Chest Pain – Rule Out MI</td><td>Bay 3 (ICU)</td></tr>
+            <tr class="row-click" onclick="go('er')"><td><span class="chip chip-amber">VERY URGENT</span></td><td><strong>Sadie Adler</strong></td><td class="mono" style="color:var(--ink-3);">12m ago</td><td>Severe Compound Fracture Left Femur</td><td>Trauma Bed 1</td></tr>
+            <tr class="row-click" onclick="go('er')"><td><span class="chip chip-yellow">URGENT</span></td><td><strong>John Marston</strong></td><td class="mono" style="color:var(--ink-3);">18m ago</td><td>High Fever 104F, Rigors &amp; Chills</td><td>Triage Area B</td></tr>
+          </table>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:14px;">Active Bed Occupancy Matrix</div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span>Intensive Care Unit (ICU)</span><strong class="tag-red">11 / 12 Beds (92%)</strong></div>
+            <div class="progress" style="margin-bottom:14px;"><div style="width:92%;background:var(--red);"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span>Medical Ward A</span><strong class="tag-green">38 / 50 Beds (76%)</strong></div>
+            <div class="progress"><div style="width:76%;background:var(--teal);"></div></div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:12px;">Active Medication &amp; Lab Alerts</div>
+            <div class="alert alert-red" style="margin:0;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+              <div><strong>CRITICAL VALUE: POTASSIUM</strong><br>Patient: Sarah Connor (ICU Bed 3) – K+: 6.2 mEq/L</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EMERGENCY DEPT -->
+    <section class="view" id="view-er">
+      <div class="triage-band">
+        <div class="triage-card t-red"><h4><span class="dot" style="background:var(--red);"></span>Level 1: Immediate</h4><div class="n">3 Patients • Avg Waiting: 2 min</div></div>
+        <div class="triage-card t-amber"><h4><span class="dot" style="background:var(--amber);"></span>Level 2: Very Urgent</h4><div class="n">5 Patients • Avg Waiting: 8 min</div></div>
+        <div class="triage-card t-yellow"><h4><span class="dot" style="background:#C8A227;"></span>Level 3: Urgent</h4><div class="n">6 Patients • Avg Waiting: 19 min</div></div>
+      </div>
+      <div class="card card-pad">
+        <div class="card-head"><div class="card-title">Active Triage Board</div><button class="btn btn-dark btn-sm" onclick="toast('New ER arrival form opened')">Admit New ER Arrival ↗</button></div>
+        <table style="margin-top:10px;">
+          <tr><th>Triage / Arrival</th><th>Patient &amp; Vitals</th><th>Chief Complaint / History</th><th>Clinician &amp; Location</th><th>Timer</th><th>Rapid Action</th></tr>
+          <tr class="row-click" onclick="openRecord()">
+            <td><span class="chip chip-red">L1: IMMEDIATE</span><br><span style="font-size:11px;color:var(--ink-3);">Ambulance • 14:02</span></td>
+            <td><strong>Arthur Morgan</strong><br><span class="mono" style="font-size:11.5px;color:var(--ink-3);">BP: 85/50 • HR: 112 • SpO2: 91%</span></td>
+            <td>Crushing substernal chest pain radiating to left arm. Sweating heavily. S/P Sublingual NTG x 1.</td>
+            <td>Dr. House<br><span style="font-size:11.5px;color:var(--ink-3);">Resus Bay 1</span></td>
+            <td><span class="tag-red">● 04 min</span></td>
+            <td><button class="btn btn-dark btn-sm" onclick="event.stopPropagation();toast('STAT lab order sent for Arthur Morgan')">STAT Lab Order</button></td>
+          </tr>
+          <tr class="row-click" onclick="toast('Opening Sadie Adler chart')">
+            <td><span class="chip chip-amber">L2: VERY URGENT</span><br><span style="font-size:11px;color:var(--ink-3);">Walk-in • 14:15</span></td>
+            <td><strong>Sadie Adler</strong><br><span class="mono" style="font-size:11.5px;color:var(--ink-3);">BP: 132/84 • HR: 98 • SpO2: 97%</span></td>
+            <td>Deformed right ankle with significant localized pain. Suspected compound trimalleolar fracture.</td>
+            <td>Dr. Cameron<br><span style="font-size:11.5px;color:var(--ink-3);">Trauma Bay 2</span></td>
+            <td><span class="tag-amber">● 12 min</span></td>
+            <td><button class="btn btn-dark btn-sm" onclick="event.stopPropagation();toast('STAT X-ray ordered for Sadie Adler')">STAT X-Ray</button></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- OUTPATIENT -->
+    <section class="view" id="view-op">
+      <div class="tabs">
+        <div class="tab active" onclick="opTab(this,'Cardiology Clinic')">Cardiology Clinic (18)</div>
+        <div class="tab" onclick="opTab(this,'Pediatrics')">Pediatrics (32)</div>
+        <div class="tab" onclick="opTab(this,'General Medicine')">General Medicine (84)</div>
+        <div class="tab" onclick="opTab(this,'Orthopedics')">Orthopedics (12)</div>
+      </div>
+      <div class="card card-pad">
+        <div class="card-head"><div class="card-title" id="opClinicTitle">Daily Visit Queue &amp; Wait Times — Cardiology Clinic</div><button class="btn btn-dark btn-sm" onclick="toast('New OP token created')">Create New OP Token ↗</button></div>
+        <table style="margin-top:10px;">
+          <tr><th>Token / Type</th><th>Patient Details</th><th>Scheduled Doctor</th><th>Wait Time</th><th>Visit Status</th><th>Billing</th><th>Action</th></tr>
+          <tr>
+            <td class="mono"><strong>#CARD-102</strong></td>
+            <td><strong>Hosea Matthews</strong><br><span style="font-size:11.5px;color:var(--ink-3);">68M • ID: OP-992</span></td>
+            <td>Dr. Gregory House</td>
+            <td class="tag-red">22 min (Delayed)</td>
+            <td><span class="chip chip-amber">IN PROGRESS</span></td>
+            <td><span class="chip chip-green">PAID</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="toast('Hosea Matthews checked in')">Check In</button></td>
+          </tr>
+          <tr>
+            <td class="mono"><strong>#CARD-103</strong></td>
+            <td><strong>Lenny Summers</strong><br><span style="font-size:11.5px;color:var(--ink-3);">24M • ID: OP-914</span></td>
+            <td>Dr. Gregory House</td>
+            <td>10 min wait</td>
+            <td><span class="chip chip-blue">WAITING</span></td>
+            <td><span class="chip chip-red">UNPAID</span></td>
+            <td><button class="btn btn-outline btn-sm" onclick="toast('Opening billing for Lenny Summers')">Process Bill</button></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ADMITTED CENSUS -->
+    <section class="view" id="view-census">
+      <div class="tabs">
+        <div class="tab" onclick="wardTab(this)">All Wards (142)</div>
+        <div class="tab active" onclick="wardTab(this)">ICU Bed Space (12)</div>
+        <div class="tab" onclick="wardTab(this)">Medical Ward A (50)</div>
+        <div class="tab" onclick="wardTab(this)">Surgical Ward B (40)</div>
+        <div class="tab" onclick="wardTab(this)">Pediatrics Unit (20)</div>
+      </div>
+      <div class="grid grid-4" style="margin-bottom:18px;">
+        <div class="ward-card row-click" onclick="toast('Opening ICU Bed 1 chart')">
+          <img class="ward-photo" alt="ICU bed 1" src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=500&q=60">
+          <div class="wc-body"><div class="wc-name">ICU Bed 1 – Arthur Morgan</div><div class="wc-sub"><span>Allergy: Penicillin</span><span class="chip chip-red">Fall Risk</span></div></div>
+        </div>
+        <div class="ward-card row-click" onclick="toast('Opening ICU Bed 2 chart')">
+          <img class="ward-photo" alt="ICU bed 2" src="https://images.unsplash.com/photo-1516549655169-df83a0774514?w=500&q=60">
+          <div class="wc-body"><div class="wc-name">ICU Bed 2 – Sadie Adler</div><div class="wc-sub"><span>Post-Op Ortho / Stable</span><span class="chip chip-blue">Full</span></div></div>
+        </div>
+        <div class="ward-card row-click" onclick="openRecord()">
+          <img class="ward-photo" alt="ICU bed 3" src="https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?w=500&q=60">
+          <div class="wc-body"><div class="wc-name">ICU Bed 3 – Sarah Connor</div><div class="wc-sub"><span>Arrhythmia Alert</span><span class="chip chip-amber">Guarded</span></div></div>
+        </div>
+      </div>
+      <div class="card card-pad">
+        <div class="card-title" style="margin-bottom:6px;">Active Bed Allotments</div>
+        <table>
+          <tr><th>Ward/Bed</th><th>Admitted Patient</th><th>Primary Clinical Diagnosis</th><th>Attending Physician</th><th>Admission</th><th>Status / Priority</th></tr>
+          <tr class="row-click" onclick="toast('Opening John Marston chart')">
+            <td class="mono"><strong>Med A - 402</strong></td>
+            <td><strong>John Marston</strong><br><span style="font-size:11.5px;color:var(--ink-3);">36M • MRN-4820</span></td>
+            <td>Pneumonia, Bilateral Lobar – Intravenous Antibiotics Course</td>
+            <td>Dr. Allison Cameron</td>
+            <td>3 Days</td>
+            <td><span class="chip chip-green">DISCHARGE READY</span></td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- PATIENT RECORDS -->
+    <section class="view" id="view-records">
+      <div class="grid" style="grid-template-columns:280px 1fr; gap:16px;">
+        <div class="card card-pad pr-profile">
+          <img class="pr-avatar" src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=60" alt="Arthur Morgan">
+          <div class="pr-name">Arthur Morgan</div>
+          <div class="pr-meta">MRN-882103 • male, 42 Yrs</div>
+          <div class="pr-section">
+            <div class="pr-label">Emergency Contact</div>
+            <div class="pr-value">Mary Linton (Fiancée) – 555-0192</div>
+          </div>
+          <div class="pr-section">
+            <div class="pr-label">Known Allergies</div>
+            <div class="pr-value" style="color:var(--red); font-weight:600;">PENICILLIN (Anaphylaxis)</div>
+          </div>
+          <div class="pr-section">
+            <div class="pr-label">Active Chronic Conditions</div>
+            <div class="pr-value">Hypertension Grade II, Asthma</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:14px;">Longitudinal Care History &amp; Timeline</div>
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="tl-date">14 Oct 2024 · 14:02 UTC</div>
+                <div class="tl-title">Emergency Trauma Admission (Resus Bay 1)</div>
+                <div class="tl-desc">Admitted via ambulance. Presenting symptoms included acute severe radiating chest pain &amp; dyspnea. Admitting clinician: Dr. House.</div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-date">08 Sep 2024 · 09:30 UTC</div>
+                <div class="tl-title">Outpatient Consultation (Cardiology Clinic)</div>
+                <div class="tl-desc">Follow-up checkup for stage 2 hypertension. Medication dosage adjusted (Lisinopril increased to 20mg daily).</div>
+              </div>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:14px;">Recent Laboratory and Imaging Orders</div>
+            <div class="grid" style="grid-template-columns:1fr 1fr;">
+              <div style="border:1px solid var(--line); border-radius:8px; padding:12px 14px;">
+                <div style="font-weight:600; font-size:13px;">ECG / Electrocardiogram</div>
+                <div class="chart-note" style="margin-top:4px;">Result: ST-Elevation in Anterior Leads V1–V4 (Confirmed MI)</div>
+                <div style="font-size:11px; color:var(--ink-3); margin-top:6px;">Ordered 12 min ago • Authorized: Dr. House</div>
+              </div>
+              <div style="border:1px solid var(--line); border-radius:8px; padding:12px 14px;">
+                <div style="font-weight:600; font-size:13px;">Troponin T Level (Serology)</div>
+                <div class="chart-note" style="margin-top:4px;">Result: <span class="result-red">1.84 ng/mL (STAT High Critical Alert)</span></div>
+                <div style="font-size:11px; color:var(--ink-3); margin-top:6px;">Ordered 18 min ago • Laboratory Status: Complete</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INPATIENT WORK -->
+    <section class="view" id="view-inpatient">
+      <div class="grid grid-main">
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:10px;">Critical Inpatient Workspace – Sarah Connor (ICU Bed 3)</div>
+            <div class="grid" style="grid-template-columns:1fr 1fr 1fr; gap:14px;">
+              <div><div class="pr-label">Attending Clinician</div><div class="pr-value" style="font-weight:600;">Dr. Gregory House (ICU Chief)</div></div>
+              <div><div class="pr-label">Consulting Specialist</div><div class="pr-value" style="font-weight:600;">Dr. Allison Cameron (Cardiology)</div></div>
+              <div><div class="pr-label">Active Working Diagnosis</div><div class="pr-value" style="font-weight:600; color:var(--red);">Myocardial Infarction / Post-Cath Recovery</div></div>
+            </div>
+          </div>
+          <div class="card card-pad">
+            <div class="card-head"><div class="card-title">Active Medication Orders &amp; Stock Verification</div><button class="btn btn-dark btn-sm" onclick="toast('New Rx order form opened')">Add New Rx Order</button></div>
+            <div class="alert alert-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+              <div><strong>PHARMACY SAFETY ALERT:</strong> Patient is allergic to Penicillin. Cross-sensitivity with Cephalosporins requires careful monitor.</div>
+            </div>
+            <div class="med-row">
+              <div style="flex:1;"><div class="med-name">Ceftriaxone 1g IV</div><div class="med-sub">Route: IV Push • Frequency: q12h</div></div>
+              <div class="med-timing">Timing: 08:00 – 20:00 • Next Dose due 20:00</div>
+              <span class="chip chip-green">STOCK OK</span>
+              <button class="btn btn-dark btn-sm" onclick="toast('Ceftriaxone dose administered & logged')">Administer</button>
+            </div>
+            <div class="med-row">
+              <div style="flex:1;"><div class="med-name">Propofol 10mcg/kg</div><div class="med-sub">Continuous Infusion • Rate titration</div></div>
+              <div class="med-timing">Controlled Infusion Pump Active • ICU Protocol</div>
+              <span class="chip chip-green">STOCK OK</span>
+              <button class="btn btn-dark btn-sm" onclick="toast('Titration panel opened for Propofol')">Titrate Rate</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="card card-pad">
+            <div class="card-title" style="margin-bottom:10px;">Rounds, Notes &amp; Discharge Meds</div>
+            <div class="pr-label" style="margin-bottom:8px;">Daily Progress Summary Notes</div>
+            <div class="note-box">
+              "Hemodynamics improving. Post-op coronary bypass catheterization has good patent flow. Keeping patient sedated under mild mechanical ventilation. Extubation planned for tomorrow AM if arterial blood gases remain stable."
+              <div class="note-meta">Author: Dr. Gregory House (14:32)</div>
+            </div>
+            <div class="pr-label" style="margin:16px 0 8px;">Planned Discharge Medications</div>
+            <div class="pr-value">• Clopidogrel 75mg daily PO<br>• Atorvastatin 40mg bedtime PO</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg"></span></div>
+
+<script>
+const titles = {
+  ops:['Operations Control & Live Command Center','Live Operational'],
+  er:['Emergency Department Real-Time Command & Triage','Live Operational'],
+  op:['Outpatient (OP) Visit Queue & Scheduled Clinics','Live Operational'],
+  census:['Inpatient Census & Ward Management','Live Operational'],
+  records:['Complete Longitudinal Electronic Patient Health Record','Live Operational'],
+  inpatient:['Interactive Inpatient Treatment Workspace & Ordering Console','ICU Bed 3']
+};
+function go(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.querySelector('.nav-item[data-view="'+v+'"]').classList.add('active');
+  document.getElementById('pageTitle').textContent = titles[v][0];
+  document.getElementById('pagePill').lastChild ? null : null;
+  document.getElementById('pagePill').textContent = titles[v][1];
+  document.getElementById('app').scrollTop = 0;
+  window.scrollTo(0,0);
+  closeMenu();
+}
+function openRecord(){ go('records'); }
+function opTab(el,name){
+  document.querySelectorAll('#view-op .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('opClinicTitle').textContent = 'Daily Visit Queue & Wait Times — ' + name;
+}
+function wardTab(el){
+  document.querySelectorAll('#view-census .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function openMenu(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('scrim').classList.add('show'); }
+function closeMenu(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('scrim').classList.remove('show'); }
+</script>
+</body>
+</html>
